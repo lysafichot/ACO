@@ -16,7 +16,7 @@ class Api {
 
         app.set('this', this);
 
-        this.map = new Map(20, 20);
+        this.map = new Map(10, 10);
         app.set('map', this.map);
 
         io.on('connection', function(socket) {
