@@ -12,7 +12,7 @@ class Map  {
         this.grid = [];
         this.temp_grid = [];
 
-        this.max_ants_on_grid = 1;
+        this.max_ants_on_grid = 10;
         this.nb_ants_on_grid = 0;
 
         this.initMap();
@@ -20,9 +20,12 @@ class Map  {
 
     initMap() {
         this.initGrids();
+
+        this.grid[0][0].CASE_TYPE.nest = 1
+        this.temp_grid[0][0].CASE_TYPE.nest = 1
+
         this.setFood(this.grid);
         this.setFood(this.temp_grid);
-
         this.setWall(this.grid);
         this.setWall(this.temp_grid);
 
@@ -37,6 +40,7 @@ class Map  {
         self.x = x;
         self.y = y;
         self.CASE_TYPE = {
+            nest: 0,
             wall: 0,
             ant: null,
             food: {
@@ -73,9 +77,9 @@ class Map  {
     }
 
     setFood(grid) {
-        var x = 1
+        var x = 3
             //this.getRandomInt(0, this.width - 1);
-        var y = 1
+        var y = 3
             //this.getRandomInt(0, this.height -1);
 
         grid[x][y].CASE_TYPE.food.has = true;
@@ -105,7 +109,6 @@ class Map  {
                 }
             }
         }
-        console.log( this.grid[1, 1])
         for (var i = 0; i < this.width; i = i + 1) {
             for (var ii = 0; ii < this.height; ii = ii + 1) {
                 this.grid[i][ii].CASE_TYPE.ant = this.temp_grid[i][ii].CASE_TYPE.ant;
@@ -169,14 +172,14 @@ class Map  {
             this.temp_grid[x][y].pheromoneV1 = 1;
             this.temp_grid[x][y].pheromoneV2 = 1
 
-        } else {
-            var sumV1 = pheromones_V1.reduce(function(a, b) { return a + b; }, 0)
-            var sumV2 = pheromones_V2.reduce(function(a, b) { return a + b; }, 0)
-            var avgV2 =  sumV2 / pheromones_V2.length;
-
+        }
+        if (!this.grid[x][y].CASE_TYPE.food.has) {
+            var sumV1 = pheromones_V1.reduce(function(a, b) { return a + b; }, 0);
+            var sumV2 = pheromones_V2.reduce(function(a, b) { return a + b; }, 0);
             var V1 = ant.evaporation * (ant.bruit * Math.max.apply(Math, pheromones_V1));
             if (sumV1 > 0) {
                 var avgV1 =  sumV1 / pheromones_V1.length;
+
                 V1 += (1 - ant.bruit) * avgV1;
             }
             var V2 = ant.evaporation * (ant.bruit * Math.max.apply(Math, pheromones_V2));
@@ -185,10 +188,10 @@ class Map  {
                 V2 += (1 - ant.bruit) * avgV2;
             }
 
-            this.temp_grid[x][y].pheromoneV1 = V1 + 2;
-            this.temp_grid[x][y].pheromoneV1 = V2;
-        }
+            this.temp_grid[x][y].pheromoneV1 = V1;
+            this.temp_grid[x][y].pheromoneV2 = V2;
 
+        }
 
         if((ant.has_food && !cell_with_max.pheromoneV2) || !ant.has_food && !cell_with_max.pheromoneV1) {
             return this.getRandomCoordinates(x, y);

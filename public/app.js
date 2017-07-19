@@ -69,14 +69,16 @@ app.controller('IndexController', function($scope, socket) {
     };
 
     this.colorCell  = function (cell) {
-        if(cell.pheromoneV1 > 0) {
-            return "rgba(55,58,99, 0.5)";
-
+        if(cell.pheromoneV1 > 0 && !cell.CASE_TYPE.food.has && !cell.CASE_TYPE.nest && !cell.CASE_TYPE.ant) {
+            return "rgba(55,58,99," + cell.pheromoneV1 + ")";
         }
         if (cell.CASE_TYPE.ant) {
             return "rgb(0,0,0)";
         } else if(cell.CASE_TYPE.food.has) {
             return "rgb(14,55,250)";
+
+        } else if(cell.CASE_TYPE.nest) {
+            return "rgb(200,20,20)";
 
         } else if (cell.CASE_TYPE.wall) {
             return "rgb(14,55,87)";
@@ -96,9 +98,6 @@ app.controller('IndexController', function($scope, socket) {
             });
         }));
     });
-
-
-
 
     socket.on('map:update', function(data) {
         self.drawCells(data.map(function(row) {
