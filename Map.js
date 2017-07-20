@@ -34,6 +34,12 @@ class Map  {
     initSimulation() {
         this.moveAnts();
     }
+    resetSimulation() {
+        this.initMap();
+    }
+    reloadSimulation() {
+        this.nb_ants_on_grid = 0;
+    }
 
     Case(x, y) {
         var self = {};

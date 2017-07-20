@@ -26,13 +26,18 @@ class Api {
             var map = app.get('map');
 
             socket.on('map:simulation', function () {
-                setInterval(function () {
-                    map.initSimulation();
-                    socket.emit('map:update', map.grid);
-                }, 500);
-                socket.emit('map:update', map.grid);
+                    setInterval(function () {
+                        map.initSimulation();
+                        socket.emit('map:update', map.grid);
+                    }, 500);
+                socket.emit('map:update', map.grid)
             });
-
+            socket.on('map:remove', function() {
+                map.resetSimulation();
+            });
+            socket.on('map:reload', function() {
+                map.reloadSimulation();
+            })
         });
 
         server.listen(3000, function() {
@@ -51,4 +56,3 @@ class Api {
 }
 
 new Api();
-

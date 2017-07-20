@@ -14,7 +14,9 @@
 <script type="application/javascript" src="angular-route/angular-route.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 
-<input ng-click="runSimulation()" type="submit" value="Run">
+<input ng-click="runSimulation(); running=true; reload=true" ng-hide="running" type="submit" value="Run">
+<input ng-show="reload" ng-click="reloadSimulation()" type="submit" value="Reload">
+<input type="submit" ng-click="remove()" value="Reset Grid">
 <script type="application/javascript" src="app.js"></script>
 </body>
 

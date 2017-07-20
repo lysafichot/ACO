@@ -31,6 +31,8 @@ app.factory('socket', ['$rootScope', function($rootScope) {
 }]);
 
 app.controller('IndexController', function($scope, socket) {
+
+    this.simulation = false;
     this.mapParams = {};
     this.context;
     this.data;
@@ -109,6 +111,13 @@ app.controller('IndexController', function($scope, socket) {
 
     $scope.runSimulation = function () {
         socket.emit('map:simulation');
+    };
+    $scope.remove = function() {
+        console.log("g reset la grid");
+        socket.emit('map:remove');
+    };
+    $scope.reloadSimulation = function() {
+        socket.emit('map:reload');
     }
 
 });
