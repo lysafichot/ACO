@@ -16,7 +16,7 @@ class Api {
 
         app.set('this', this);
 
-        this.map = new Map(10, 10);
+        this.map = new Map(18, 18);
         app.set('map', this.map);
 
         io.on('connection', function(socket) {
@@ -29,7 +29,7 @@ class Api {
                 setInterval(function () {
                     map.initSimulation();
                     socket.emit('map:update', map.grid);
-                }, 500);
+                }, 50);
                 socket.emit('map:update', map.grid);
             });
 
