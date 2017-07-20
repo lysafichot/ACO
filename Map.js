@@ -5,15 +5,15 @@ class Map  {
         this.height = height;
         this.width = width;
 
-        this.cell_lenght = 20;
+        this.cell_lenght = 30;
 
         this.grid = [];
         this.temp_grid = [];
 
-        this.max_ants_on_grid = 10;
+        this.max_ants_on_grid = 5;
         this.nb_ants_on_grid = 0;
 
-        this.pourcentage_wall = 0.1
+        this.pourcentage_wall = 0.2
 
         this.initMap();
     }
@@ -203,7 +203,7 @@ class Map  {
         if(ant && (
             (ant.state == 'FULL' && !cell_with_max_pheromone.pheromoneV2) ||
             (ant.state == 'EMPTY' && !cell_with_max_pheromone.pheromoneV1)) ||
-            (Math.random() > (1 - ant.exploration) / (1 - ant.confiance))
+            (Math.random() < (1 - ant.exploration) / (1 - ant.confiance))
         ) {
             return this.getRandomCoordinates(x, y);
         }
@@ -218,8 +218,6 @@ class Map  {
         var yy = next_coords[1];
         if(this.grid[x][y].CASE_TYPE.nest && this.grid[x][y].CASE_TYPE.ant.state == 'FULL') {
             if(this.temp_grid[x][y].CASE_TYPE.ant.road_trip == 3) {
-
-
                 this.temp_grid[x][y].CASE_TYPE.ant = null;
             } else if (this.temp_grid[x][y].CASE_TYPE.ant.road_trip < 3) {
                 this.temp_grid[x][y].CASE_TYPE.ant.state = 'EMPTY'
@@ -234,7 +232,19 @@ class Map  {
         if (!this.temp_grid[xx][yy].CASE_TYPE.ant && !this.temp_grid[xx][yy].CASE_TYPE.wall) {
             this.temp_grid[xx][yy].CASE_TYPE.ant = this.temp_grid[x][y].CASE_TYPE.ant;
             this.temp_grid[x][y].CASE_TYPE.ant = null;
+        } else if(this.temp_grid[xx][yy].CASE_TYPE.wall || this.temp_grid[xx][yy].CASE_TYPE.wall) {
+            this.moveToThisCase(x, y);
         }
+    }
+    getPath() {
+
+        var ant = new Ant()
+        ant.confiance = 1;
+        ant.exploration = 0;
+        ant.road_trip = 3;
+        this.grid[0][0].CASE_TYPE.ant = new Ant();
+        this.temp_grid[0][0].CASE_TYPE.ant = this.grid[0][0].CASE_TYPE.ant;
+        this.moveAnts();
     }
 
     getRandomCoordinates(x, y) {

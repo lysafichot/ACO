@@ -117,4 +117,8 @@ app.controller('IndexController', function($scope, socket) {
         socket.emit('map:simulation');
     }
 
+    $scope.getPath = function () {
+        socket.emit('map:path');
+    }
+
 });
