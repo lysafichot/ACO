@@ -33,6 +33,7 @@ class Map  {
         this.moveAnts();
     }
     resetSimulation() {
+        this.nb_ants_on_grid = 5;
         this.initMap();
     }
     reloadSimulation() {
