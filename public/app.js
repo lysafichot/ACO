@@ -45,6 +45,8 @@ app.controller('IndexController', function($scope, socket) {
         document.getElementsByTagName('body')[0].appendChild(canvas);
 
         this.context = canvas.getContext("2d");
+        this.imgWall = new Image();
+        this.imgAnt = new Image();
     };
 
     this.drawCells = function (cell) {
@@ -79,7 +81,9 @@ app.controller('IndexController', function($scope, socket) {
                 return "rgb(88, 41, 0)";
 
             } else {
-                return "rgb(0,0,0)";
+                this.imgAnt.src = "images/fourmi.png";
+                var pathAnt=this.context.createPattern(this.imgAnt, "repeat");
+                return pathAnt;
 
             }
         } else if(cell.CASE_TYPE.food.has) {
@@ -89,7 +93,9 @@ app.controller('IndexController', function($scope, socket) {
             return "rgb(200,20,20)";
 
         } else if (cell.CASE_TYPE.wall) {
-            return "rgb(14,55,87)";
+            this.imgWall.src = "images/wall.png";
+            var pathWall=this.context.createPattern(this.imgWall, "repeat");
+            return pathWall;
 
 
 
