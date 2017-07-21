@@ -75,7 +75,13 @@ app.controller('IndexController', function($scope, socket) {
             return "rgba(55,58,99," + cell.pheromoneV1 + ")";
         }
         if (cell.CASE_TYPE.ant) {
-            return "rgb(0,0,0)";
+            if(cell.CASE_TYPE.ant.state == 'FULL') {
+                return "rgb(88, 41, 0)";
+
+            } else {
+                return "rgb(0,0,0)";
+
+            }
         } else if(cell.CASE_TYPE.food.has) {
             return "rgb(14,55,250)";
 
@@ -118,6 +124,10 @@ app.controller('IndexController', function($scope, socket) {
     };
     $scope.reloadSimulation = function() {
         socket.emit('map:reload');
+    }
+
+    $scope.getPath = function () {
+        socket.emit('map:path');
     }
 
 });

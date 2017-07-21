@@ -5,15 +5,15 @@ class Map  {
         this.height = height;
         this.width = width;
 
-        this.cell_lenght = 50;
-
-        this.data;
+        this.cell_lenght = 30;
 
         this.grid = [];
         this.temp_grid = [];
 
-        this.max_ants_on_grid = 10;
+        this.max_ants_on_grid = 5;
         this.nb_ants_on_grid = 0;
+
+        this.pourcentage_wall = 0.2
 
         this.initMap();
     }
@@ -21,13 +21,11 @@ class Map  {
     initMap() {
         this.initGrids();
 
-        this.grid[0][0].CASE_TYPE.nest = 1
-        this.temp_grid[0][0].CASE_TYPE.nest = 1
-
-        this.setFood(this.grid);
-        this.setFood(this.temp_grid);
+        this.grid[0][0].CASE_TYPE.nest = 1;
         this.setWall(this.grid);
-        this.setWall(this.temp_grid);
+        this.setFood(this.grid);
+
+        this.temp_grid = this.cloneGrid(this.grid);
 
     };
 
@@ -39,6 +37,10 @@ class Map  {
     }
     reloadSimulation() {
         this.nb_ants_on_grid = 0;
+    }
+
+    cloneGrid(array) {
+        return JSON.parse(JSON.stringify(array))
     }
 
     Case(x, y) {
@@ -54,19 +56,8 @@ class Map  {
                 foodLeft: 0
             },
         };
-        self.pheromoneV1 = 0,
-        self.pheromoneV2 = 0,
-        self.getCaseType = function () {
-            if(self.CASE_TYPE.wall) {
-                return 'WALL'
-            } else if(self.CASE_TYPE.food.has) {
-                return 'FOOD'
-            } else if(self.CASE_TYPE.ant) {
-                return 'ANT'
-            } else  {
-                return false
-            }
-        }
+        self.pheromoneV1 = 0;
+        self.pheromoneV2 = 0;
 
         return self;
     }
@@ -74,25 +65,35 @@ class Map  {
     initGrids() {
         for (var x = 0; x < this.width; x = x + 1) {
             this.grid[x] = [];
-            this.temp_grid[x] = [];
             for (var y = 0; y < this.height; y = y + 1) {
                 this.grid[x][y] = this.Case(x, y);
-                this.temp_grid[x][y] = this.Case(x, y);
             }
         }
     }
 
     setFood(grid) {
-        var x = 3
-            //this.getRandomInt(0, this.width - 1);
-        var y = 3
-            //this.getRandomInt(0, this.height -1);
-
+        var x = this.getRandomInt(0, this.width - 1);
+        var y = this.getRandomInt(0, this.height -1);
+        while (grid[x][y].CASE_TYPE.wall || grid[x][y].CASE_TYPE.nest) {
+            var x = this.getRandomInt(0, this.width - 1);
+            var y = this.getRandomInt(0, this.height -1);
+        }
         grid[x][y].CASE_TYPE.food.has = true;
         grid[x][y].CASE_TYPE.food.foodLeft = 100;
     }
 
     setWall(grid) {
+
+        for (var x = 2; x < this.width; x = x + 1) {
+            for (var y = 2; y < this.height; y = y + 1) {
+                if(Math.random() < this.pourcentage_wall) {
+                    grid[x][y].CASE_TYPE.wall = 1;
+
+                }
+
+            }
+        }
+
         for (var x = 2; x < this.width; x = x + 1) {
             grid[x][0].CASE_TYPE.wall = 1;
             grid[x][this.height - 1].CASE_TYPE.wall = 1;
@@ -103,7 +104,6 @@ class Map  {
             grid[0][y].CASE_TYPE.wall = 1;
             grid[this.width - 1][y].CASE_TYPE.wall = 1;
             grid[this.width - 1][1].CASE_TYPE.wall = 1;
-
         }
     }
 
@@ -117,26 +117,10 @@ class Map  {
         }
         for (var i = 0; i < this.width; i = i + 1) {
             for (var ii = 0; ii < this.height; ii = ii + 1) {
-                this.grid[i][ii].CASE_TYPE.ant = this.temp_grid[i][ii].CASE_TYPE.ant;
-                this.grid[i][ii].pheromoneV1 = this.temp_grid[i][ii].pheromoneV1;
-
+                this.grid = this.cloneGrid(this.temp_grid);
             }
         }
-
         this.moveAntsOutOfNest();
-    }
-
-    moveAnt(x,y) {
-
-        var next_coords = this.majPheromoneAndGetNextCoord(x, y);
-
-        var xx = next_coords[0];
-        var yy = next_coords[1];
-
-        if (!this.temp_grid[xx][yy].CASE_TYPE.ant) {
-            this.temp_grid[xx][yy].CASE_TYPE.ant = this.temp_grid[x][y].CASE_TYPE.ant;
-            this.temp_grid[x][y].CASE_TYPE.ant = null;
-        }
     }
 
     moveAntsOutOfNest() {
@@ -148,61 +132,125 @@ class Map  {
         }
     }
 
+    moveAnt(x, y) {
+        this.majPheromone(x, y);
+        this.moveToThisCase(x, y);
+    }
 
-
-    majPheromoneAndGetNextCoord(x, y) {
+    majPheromone(x, y) {
         var cells_arounds = this.getArrayCoordinatesCellAround(x, y);
-        var pheromones_V1 = []
-        var pheromones_V2 = []
-        var cell_with_max = null;
-        var ant = this.grid[x][y].CASE_TYPE.ant;
+        var pheromones_V1 = [];
+        var pheromones_V2 = [];
+        var ant = this.temp_grid[x][y].CASE_TYPE.ant;
         var self = this;
 
         cells_arounds.map(function (coords) {
+            coords = self.getBoundedIndex(coords[0], coords[1]);
+            var cell = self.temp_grid[coords[0]][coords[1]];
+            pheromones_V1.push(cell.pheromoneV1);
+            pheromones_V2.push(cell.pheromoneV2);
+        });
 
-            coords =  self.getBoundedIndex(coords[0], coords[1]);
-
-            var cell = self.grid[coords[0]][coords[1]];
-            if (!ant.has_food && (!cell_with_max || cell.pheromoneV1 > cell_with_max)) {
-                cell_with_max = coords
+        var V1 = this.calculPheromonesRate(pheromones_V1, ant);
+        var V2 = this.calculPheromonesRate(pheromones_V2, ant);
+        if(this.temp_grid[x][y].CASE_TYPE.food.has) {
+            if(ant.state == 'EMPTY') {
+                this.temp_grid[x][y].CASE_TYPE.food.foodLeft -= 1;
+                ant.state = 'FULL';
             }
-            if (ant.has_food && (!cell_with_max || cell.pheromoneV2 > cell_with_max)) {
-                cell_with_max = coords
+            if (this.temp_grid[x][y].CASE_TYPE.food.foodLeft == 0 ) {
+                this.temp_grid[x][y].CASE_TYPE.food.has = false;
+                this.temp_grid[x][y].pheromoneV1 = V1;
+                this.temp_grid[x][y].pheromoneV2 = V2;
+            } else {
+                this.temp_grid[x][y].pheromoneV1 = 1;
+                this.temp_grid[x][y].pheromoneV2 = V2;
             }
-            pheromones_V1.push(cell.pheromoneV1)
-            pheromones_V2.push(cell.pheromoneV2)
-
-        })
-
-        if(this.grid[x][y].CASE_TYPE.food.has) {
-            this.temp_grid[x][y].pheromoneV1 = 1;
-            this.temp_grid[x][y].pheromoneV2 = 1
-
-        }
-        if (!this.grid[x][y].CASE_TYPE.food.has) {
-            var sumV1 = pheromones_V1.reduce(function(a, b) { return a + b; }, 0);
-            var sumV2 = pheromones_V2.reduce(function(a, b) { return a + b; }, 0);
-            var V1 = ant.evaporation * (ant.bruit * Math.max.apply(Math, pheromones_V1));
-            if (sumV1 > 0) {
-                var avgV1 =  sumV1 / pheromones_V1.length;
-
-                V1 += (1 - ant.bruit) * avgV1;
-            }
-            var V2 = ant.evaporation * (ant.bruit * Math.max.apply(Math, pheromones_V2));
-            if (sumV2 > 0) {
-                var avgV2 =  sumV1 / pheromones_V2.length;
-                V2 += (1 - ant.bruit) * avgV2;
-            }
-
+        } else if(this.temp_grid[x][y].CASE_TYPE.nest && ant.state == 'FULL') {
+            this.temp_grid[x][y].pheromoneV1 = V1;
+            this.temp_grid[x][y].pheromoneV2 = 1;
+        } else {
             this.temp_grid[x][y].pheromoneV1 = V1;
             this.temp_grid[x][y].pheromoneV2 = V2;
+        }
+    }
 
+    calculPheromonesRate(pheromones, ant){
+        var sum = pheromones.reduce(function(a, b) { return a + b; }, 0);
+        var rate = ant.evaporation * (ant.bruit * Math.max.apply(Math, pheromones));
+        if (sum > 0) {
+            var avg =  sum / pheromones.length;
+            rate += (1 - ant.bruit) * avg;
         }
 
-        if((ant.has_food && !cell_with_max.pheromoneV2) || !ant.has_food && !cell_with_max.pheromoneV1) {
+        return rate
+    }
+
+    getNextCoordinates(x, y) {
+        var cells_arounds = this.getArrayCoordinatesCellAround(x, y);
+        var cell_with_max_pheromone = null;
+        var ant = this.temp_grid[x][y].CASE_TYPE.ant;
+        if (!ant) {
+            return;
+        }
+        var self = this;
+        cells_arounds.map(function (coords) {
+            coords =  self.getBoundedIndex(coords[0], coords[1]);
+
+            var cell = self.temp_grid[coords[0]][coords[1]];
+            if (ant.state == 'EMPTY' && (!cell_with_max_pheromone || cell.pheromoneV1 > cell_with_max_pheromone.pheromoneV1)) {
+                cell_with_max_pheromone = self.temp_grid[coords[0]][coords[1]];
+            }
+            if (ant.state == 'FULL' && (!cell_with_max_pheromone || cell.pheromoneV2 > cell_with_max_pheromone.pheromoneV2)) {
+                cell_with_max_pheromone = self.temp_grid[coords[0]][coords[1]];
+            }
+        });
+
+        if(ant && (
+            (ant.state == 'FULL' && !cell_with_max_pheromone.pheromoneV2) ||
+            (ant.state == 'EMPTY' && !cell_with_max_pheromone.pheromoneV1)) ||
+            (Math.random() < (1 - ant.exploration) / (1 - ant.confiance))
+        ) {
             return this.getRandomCoordinates(x, y);
         }
-        return cell_with_max;
+
+        return [cell_with_max_pheromone.x, cell_with_max_pheromone.y];
+    }
+
+    moveToThisCase(x, y) {
+        var next_coords = this.getNextCoordinates(x, y);
+
+        var xx = next_coords[0];
+        var yy = next_coords[1];
+        if(this.grid[x][y].CASE_TYPE.nest && this.grid[x][y].CASE_TYPE.ant.state == 'FULL') {
+            if(this.temp_grid[x][y].CASE_TYPE.ant.road_trip == 3) {
+                this.temp_grid[x][y].CASE_TYPE.ant = null;
+            } else if (this.temp_grid[x][y].CASE_TYPE.ant.road_trip < 3) {
+                this.temp_grid[x][y].CASE_TYPE.ant.state = 'EMPTY'
+                this.temp_grid[x][y].CASE_TYPE.ant.road_trip++
+            }
+        }
+
+        if(this.temp_grid[xx][yy].CASE_TYPE.wall) {
+            this.temp_grid[xx][yy].pheromoneV1 = -1;
+            this.temp_grid[xx][yy].pheromoneV2 = -1;
+        }
+        if (!this.temp_grid[xx][yy].CASE_TYPE.ant && !this.temp_grid[xx][yy].CASE_TYPE.wall) {
+            this.temp_grid[xx][yy].CASE_TYPE.ant = this.temp_grid[x][y].CASE_TYPE.ant;
+            this.temp_grid[x][y].CASE_TYPE.ant = null;
+        } else if(this.temp_grid[xx][yy].CASE_TYPE.wall || this.temp_grid[xx][yy].CASE_TYPE.wall) {
+            this.moveToThisCase(x, y);
+        }
+    }
+    getPath() {
+
+        var ant = new Ant()
+        ant.confiance = 1;
+        ant.exploration = 0;
+        ant.road_trip = 3;
+        this.grid[0][0].CASE_TYPE.ant = new Ant();
+        this.temp_grid[0][0].CASE_TYPE.ant = this.grid[0][0].CASE_TYPE.ant;
+        this.moveAnts();
     }
 
     getRandomCoordinates(x, y) {
@@ -250,7 +298,6 @@ class Map  {
             [x, y - 1],
             [x - 1, y]
         ];
-
     }
 
     getRandomInt(min, max) {

@@ -16,7 +16,7 @@ class Api {
 
         app.set('this', this);
 
-        this.map = new Map(20, 20);
+        this.map = new Map(13, 13);
         app.set('map', this.map);
 
         io.on('connection', function(socket) {
@@ -38,6 +38,11 @@ class Api {
             socket.on('map:reload', function() {
                 map.reloadSimulation();
             })
+
+            socket.on('map:path', function () {
+
+                socket.emit('map:path', map.getPath());
+            });
         });
 
         server.listen(3000, function() {
